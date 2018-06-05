@@ -11,7 +11,7 @@ from rdmo.core.imports import handle_uploaded_file, validate_xml
 from rdmo.core.utils import get_model_field_meta, render_to_format
 from rdmo.core.views import ModelPermissionMixin
 
-from .imports import import_conditions
+from .imports import compare_models, import_conditions
 from .models import Condition
 from .serializers.export import ConditionSerializer as ExportSerializer
 from .renderers import XMLRenderer
@@ -52,6 +52,7 @@ class ConditionsImportXMLView(ModelPermissionMixin, ListView):
     permission_required = ('conditions.add_condition', 'conditions.change_condition', 'conditions.delete_condition')
     success_url = reverse_lazy('conditions')
     parsing_error_template = 'core/import_parsing_error.html'
+    confirm_page_template = 'conditions/conditions_confirmation_page.html'
 
     def get(self, request, *args, **kwargs):
         return HttpResponseRedirect(self.success_url)
@@ -66,8 +67,22 @@ class ConditionsImportXMLView(ModelPermissionMixin, ListView):
 
         roottag, xmltree = validate_xml(tempfilename)
         if roottag == 'conditions':
-            import_conditions(xmltree)
-            return HttpResponseRedirect(self.success_url)
+            basemodel, importmodel, do_save = import_conditions(xmltree, do_save=False)
+            if do_save is False:
+                # ConditionsImportXMLConfirmationView.as_view(parsedmodel)
+                return self.render_confirmation_page(request, basemodel=basemodel, importmodel=importmodel)
+            else:
+                return HttpResponseRedirect(self.success_url)
         else:
             log.info('Xml parsing error. Import failed.')
             return render(request, self.parsing_error_template, status=400)
+
+    def render_confirmation_page(self, request, basemodel, importmodel, *args, **kwargs):
+        to_be_imported = compare_models(basemodel, importmodel)
+        return render(request, self.confirm_page_template, {
+            'status': 200, 'basemodel': basemodel,
+            'importmodel': importmodel, 'to_be_imported': to_be_imported
+        })
+        # return render(request, self.confirm_page_template, {
+        #     'status': 200}, basemodel=basemodel
+        # )

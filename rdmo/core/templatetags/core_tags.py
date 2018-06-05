@@ -1,5 +1,5 @@
 from markdown import markdown as markdown_function
-
+from rdmo.core.imports import get_value_from_treenode
 from django import template
 from django.conf import settings
 from django.utils import translation
@@ -123,3 +123,13 @@ def next(value, arg):
 @stringfilter
 def markdown(value):
     return mark_safe(markdown_function(force_text(value)))
+
+
+@register.filter
+def keyvaluedic(dict, key):
+    return dict[key]
+
+
+@register.filter
+def get_attribute(obj, key):
+    return getattr(obj, key)

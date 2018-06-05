@@ -1,0 +1,41 @@
+{% extends 'core/page.html' %}
+{# {% extends 'core/export.html' %} #}
+{% load staticfiles %}
+{% load compress %}
+{% load i18n %}
+{% load core_tags %}
+
+
+{% block head %}
+    <meta name='csrftoken' content="{% csrf_token %}" />
+
+    <h1>{% trans 'Conditions' %}</h1>
+    <h2>{% trans 'Condition' %}</h2>
+
+    <table style="width:100%">
+        <tr>
+            <th>Wert</th>
+            <th>vorher</th>
+            <th>nacher</th>
+            <th>import</th>
+        </tr>
+
+        {% for key in to_be_imported %}
+            <tr>
+                <th> {{ key }}</th>
+                <th> {{ basemodel|get_attribute:key }} </th>
+                <th> {{ importmodel|get_attribute:key }} </th>
+                <th> {{ val }}</th>
+            </tr>
+        {% endfor %}
+
+    </table>
+
+<p>
+    {{ basemodel.uri_prefix }}
+</p>
+
+<pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre>
+
+
+{% endblock %}
