@@ -126,7 +126,7 @@ def markdown(value):
 
 
 @register.filter
-def keyvaluedic(dict, key):
+def get_value(dict, key):
     return dict[key]
 
 

@@ -8,6 +8,17 @@
 
 {% block head %}
     <meta name='csrftoken' content="{% csrf_token %}" />
+    <style>
+        .switch {
+            cursor: pointer;
+        }
+        .bggreen {
+            background-color: #adff2f;
+        }
+        .bgred {
+            background-color: #ff2f45;
+        }
+    </style>
 
     <h1>{% trans 'Conditions' %}</h1>
     <h2>{% trans 'Condition' %}</h2>
@@ -25,17 +36,31 @@
                 <th> {{ key }}</th>
                 <th> {{ basemodel|get_attribute:key }} </th>
                 <th> {{ importmodel|get_attribute:key }} </th>
-                <th> {{ val }}</th>
+                {% if to_be_imported|get_value:key is True %}
+                    <th class="switch bgreen"> {{ to_be_imported|get_value:key }}</th>
+                {% else %}
+                    <th class="switch bgred"> {{ to_be_imported|get_value:key }}</th>
+                {% endif %}
             </tr>
         {% endfor %}
-
     </table>
 
-<p>
-    {{ basemodel.uri_prefix }}
-</p>
+    <p>
+        {{ basemodel.uri_prefix }}
+    </p>
 
-<pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre>
+    <pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre>
 
+    <script>
+        $(document).ready(function(){
+            $('.switch').on('click', function(e) {
+                $(this).toggleClass("bggreen bgred");
+                if ($(this).text() == "True")
+                    $(this).text("False")
+                else
+                    $(this).text("True");
+            });
+        });
+    </script>
 
 {% endblock %}
