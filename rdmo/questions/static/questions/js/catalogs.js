@@ -141,11 +141,14 @@ angular.module('catalogs', ['core'])
         }
     };
 
-    service.openFormModal = function(resource, obj, create, copy) {
+    service.openFormModal = function(resource, obj, create, copy, clone) {
         service.errors = {};
         service.values = {};
         service.copy = false;
-
+        service.clone = false;
+        if (clone === true){
+            service.clone = true;
+        }
         if (angular.isDefined(create) && create) {
             if (angular.isDefined(copy) && copy === true) {
                 service.copy = true;
@@ -164,23 +167,68 @@ angular.module('catalogs', ['core'])
         });
     };
 
-    service.submitFormModal = function(resource) {
-        service.storeValues(resource).then(function(response) {
-            if (resource === 'catalogs') {
-                resources.catalogs.query({list_route: 'index'}, function(catalogs) {
-                    service.catalogs = catalogs;
-                    service.current_catalog_id = response.id;
-                    service.initView();
-                });
-            } else {
-                service.initView();
-            }
-
-            $('#' + resource + '-form-modal').modal('hide');
-        }, function(result) {
-            service.errors = result.data;
+    // ------------------ NEW NEW NEW
+    service.submitCloneModal = function(resource, obj) {
+        console.log('Clicked on clone...')
+        catalog = service.catalog;
+        console.log(catalog);
+        service.errors = {};
+        service.values = {};
+        service.copy = true;
+        service.values = resources[resource].get({id: obj.id}, function() {
+            service.copy = true;
+            delete service.values.id;
+            console.log(service)
+            service.submitFormModal('catalogs');
         });
+
+
+        // service.storeValues(resource, obj);
+
+        service.initView();
+    }
+    // ------------------ NEW NEW NEW
+
+    service.submitFormModal = function(resource) {
+        console.log("------------")
+        if (service.clone === true){
+            service.storeFullCatalog(resource, service.catalog);
+        }else{
+            service.storeValues(resource).then(function(response) {
+                if (resource === 'catalogs') {
+                    resources.catalogs.query({list_route: 'index'}, function(catalogs) {
+                        service.catalogs = catalogs;
+                        service.current_catalog_id = response.id;
+                        service.initView();
+                    });
+                } else {
+                    service.initView();
+                }
+                $('#' + resource + '-form-modal').modal('hide');
+            }, function(result) {
+                service.errors = result.data;
+            });
+        }
     };
+
+    service.storeFullCatalog = function(resource, catalog){
+        console.log('Saving the full catalog...')
+        console.log(resource)
+        console.log(service)
+
+        // delete service.id;
+        catalog.key = 'clone'
+        catalog.title = 'clone'
+        catalog.title_de = 'clone'
+        catalog.title_en = 'clone'
+        service.catalogs.push(catalog)
+        $('#' + resource + '-form-modal').modal('hide');
+
+        // TODO: add something to save the catalog
+        service.storeValues(resource);
+        service.initView();
+    }
+
 
     service.openDeleteModal = function(resource, obj) {
         service.values = obj;
@@ -208,6 +256,7 @@ angular.module('catalogs', ['core'])
             $('#' + resource + '-delete-modal').modal('hide');
         });
     };
+
 
     service.storeValues = function(resource, values) {
         if (angular.isUndefined(values)) {
