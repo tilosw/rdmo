@@ -1,5 +1,4 @@
 {% extends 'core/page.html' %}
-{# {% extends 'core/export.html' %} #}
 {% load staticfiles %}
 {% load compress %}
 {% load i18n %}
@@ -23,44 +22,78 @@
     <h1>{% trans 'Conditions' %}</h1>
     <h2>{% trans 'Condition' %}</h2>
 
-    <table style="width:100%">
+    <table id="savelist_table" style="width:100%">
         <tr>
-            <th>Wert</th>
-            <th>vorher</th>
-            <th>nacher</th>
+            <th>URI</th>
             <th>import</th>
         </tr>
 
-        {% for key in to_be_imported %}
+        {% for uri, save in conditions_savelist %}
             <tr>
-                <th> {{ key }}</th>
-                <th> {{ basemodel|get_attribute:key }} </th>
-                <th> {{ importmodel|get_attribute:key }} </th>
-                {% if to_be_imported|get_value:key is True %}
-                    <th class="switch bgreen"> {{ to_be_imported|get_value:key }}</th>
+                <td> {{ uri }} </td> 
+                {% if save is True %}
+                    <td class="switch bggreen">{{ save }}</td>
                 {% else %}
-                    <th class="switch bgred"> {{ to_be_imported|get_value:key }}</th>
+                    <td class="switch bgred">{{ save }}</td>
                 {% endif %}
             </tr>
         {% endfor %}
     </table>
-
-    <p>
-        {{ basemodel.uri_prefix }}
-    </p>
-
+    
+    <form id="submit_table" method="post">
+        {# {% csrf_token %} #}
+        {# <input type="submit" name="confirm" value="bestätigen" /> #}
+        <input type="button" value="Submit" onclick="submit_data()"/>
+    </form>
+    
     <pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre>
+
 
     <script>
         $(document).ready(function(){
             $('.switch').on('click', function(e) {
-                $(this).toggleClass("bggreen bgred");
-                if ($(this).text() == "True")
-                    $(this).text("False")
+                $(this).toggleClass('bggreen bgred');
+                if ($(this).text() == 'True')
+                    $(this).text('False')
                 else
-                    $(this).text("True");
+                    $(this).text('True');
             });
         });
-    </script>
 
+        function collect_tabledata(){
+            r = {}
+            var oTable = document.getElementById('savelist_table');
+            var rowLength = oTable.rows.length;
+            for (i = 0; i < rowLength; i++){
+                var oCells = oTable.rows.item(i).cells;
+                var cellLength = oCells.length;
+                var key;
+                var val;
+                for(var j = 0; j < cellLength; j=j+2){
+                    if (j === 0){
+                        key = oCells.item(j).innerHTML.trim();
+                        val = oCells.item(j+1).innerHTML.trim();
+                    }
+                    if ( val === 'True' || val === 'False' ){
+                        r[key] = (val === 'True');
+                    }
+               }
+            }
+            return r
+        }
+        
+        function submit_data(){
+            // data = collect_tabledata();
+            // console.log(data);
+            url = "{% url 'conditions_import' "xml" %}";
+            $.ajax({
+                type: 'post',
+                url: url,
+                data: collect_tabledata(),
+                success: 'success',
+                dataType: 'dataType'
+            });
+            // action="{% url 'conditions_import' "xml" %}"
+        }
+    </script>
 {% endblock %}

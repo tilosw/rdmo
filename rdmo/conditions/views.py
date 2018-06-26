@@ -11,7 +11,7 @@ from rdmo.core.imports import handle_uploaded_file, validate_xml
 from rdmo.core.utils import get_model_field_meta, render_to_format
 from rdmo.core.views import ModelPermissionMixin
 
-from .imports import compare_models, import_conditions
+from .imports import models_are_equal, import_conditions
 from .models import Condition
 from .serializers.export import ConditionSerializer as ExportSerializer
 from .renderers import XMLRenderer
@@ -67,22 +67,16 @@ class ConditionsImportXMLView(ModelPermissionMixin, ListView):
 
         roottag, xmltree = validate_xml(tempfilename)
         if roottag == 'conditions':
-            basemodel, importmodel, do_save = import_conditions(xmltree, do_save=False)
+            conditions_savelist, do_save = import_conditions(xmltree, do_save=False)
             if do_save is False:
-                # ConditionsImportXMLConfirmationView.as_view(parsedmodel)
-                return self.render_confirmation_page(request, basemodel=basemodel, importmodel=importmodel)
+                return self.render_confirmation_page(request, conditions_savelist, tempfilename)
             else:
                 return HttpResponseRedirect(self.success_url)
         else:
             log.info('Xml parsing error. Import failed.')
             return render(request, self.parsing_error_template, status=400)
 
-    def render_confirmation_page(self, request, basemodel, importmodel, *args, **kwargs):
-        to_be_imported = compare_models(basemodel, importmodel)
+    def render_confirmation_page(self, request, conditions_savelist, tempfilename, *args, **kwargs):
         return render(request, self.confirm_page_template, {
-            'status': 200, 'basemodel': basemodel,
-            'importmodel': importmodel, 'to_be_imported': to_be_imported
+            'status': 200, 'conditions_savelist': sorted(conditions_savelist.items()), 'tempfilename': tempfilename
         })
-        # return render(request, self.confirm_page_template, {
-        #     'status': 200}, basemodel=basemodel
-        # )

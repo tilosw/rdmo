@@ -13,7 +13,7 @@ from .validators import ConditionUniqueKeyValidator
 log = logging.getLogger(__name__)
 
 
-def import_conditions(conditions_node, do_save=False):
+def import_conditions(conditions_node, conditions_savelist={}, do_save=False):
     log.info('Importing conditions')
     nsmap = get_ns_map(conditions_node.getroot())
 
@@ -27,7 +27,7 @@ def import_conditions(conditions_node, do_save=False):
             log.info('Condition not in db. Created with uri ' + condition_uri)
         else:
             log.info('Condition does exist. Loaded from uri ' + condition_uri)
-        basecondition = condition
+        condition_before = condition
         condition.uri_prefix = condition_uri.split('/conditions/')[0]
         condition.key = condition_uri.split('/')[-1]
         condition.comment = get_value_from_treenode(condition_node, get_ns_tag('dc:comment', nsmap))
@@ -58,30 +58,20 @@ def import_conditions(conditions_node, do_save=False):
             log.info('Condition not saving "' + str(condition_uri) + '" due to validation error')
             pass
         else:
+            conditions_savelist[condition_uri] = models_are_equal(condition_before, condition)
             log.info('Condition saving to "' + str(condition_uri) + '"')
             if do_save is True:
                 condition.save()
-    return basecondition, condition, do_save
+    log.debug(conditions_savelist)
+    return conditions_savelist, do_save
 
 
-def compare_models(basemodel, importmodel):
-    bm = basemodel
-    im = importmodel
-    print("COMPARING THE TWO MODELS...")
-    to_be_imported = {
-        'uri_prefix': compare_key(bm.uri_prefix, im.uri_prefix),
-        'key': compare_key(bm.key, im.key),
-        'comment': compare_key(bm.comment, im.comment),
-        'relation': compare_key(bm.relation, im.relation),
-        'source': compare_key(bm.source, im.source),
-        'target_text': compare_key(bm.target_text, im.target_text),
-        'target_option': compare_key(bm.target_option, im.target_option),
-    }
-    return to_be_imported
-
-
-def compare_key(key1, key2):
-    r = False
-    if key1 != key2:
-        r = True
-    return r
+def models_are_equal(model1, model2):
+    are_equal = True
+    for att, val in model1.__dict__.iteritems():
+        try:
+            if val != getattr(model2, 'heythere'):
+                are_equal = False
+        except:
+            are_equal = False
+    return are_equal
