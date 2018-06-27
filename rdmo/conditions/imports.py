@@ -58,12 +58,12 @@ def import_conditions(conditions_node, conditions_savelist={}, do_save=False):
             log.info('Condition not saving "' + str(condition_uri) + '" due to validation error')
             pass
         else:
-            log.debug(condition_uri)
+            log.debug(type(conditions_savelist))
+            log.debug(conditions_savelist)
             conditions_savelist[condition_uri] = models_are_equal(condition_before, condition)
-            log.info('Condition saving to "' + str(condition_uri) + '"')
             if do_save is True:
+                log.info('Condition saving to "' + str(condition_uri) + '"')
                 condition.save()
-    log.debug(conditions_savelist)
     return conditions_savelist, do_save
 
 
@@ -71,8 +71,9 @@ def models_are_equal(model1, model2):
     are_equal = True
     for att, val in model1.__dict__.iteritems():
         try:
-            if val != getattr(model2, 'heythere'):
+            if val != getattr(model2, att):
                 are_equal = False
-        except:
+        except Exception as e:
+            log.debug('Comparison exception ' + str(e))
             are_equal = False
     return are_equal

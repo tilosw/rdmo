@@ -1,3 +1,4 @@
+import json
 import logging
 
 from django.conf import settings
@@ -64,15 +65,15 @@ class ConditionsImportXMLView(ModelPermissionMixin, ListView):
 
         # in case of receiving xml data
         try:
-            conditions_savelist = request.POST['tabledata']
+            conditions_savelist = json.loads(request.POST['tabledata'])
             tempfilename = self.cipher.decrypt(request.POST['filename'])
-            filename_good = is_filename_good(tempfilename, request.POST['fn_token'])
         except KeyError:
             pass
         else:
             log.info('Post seems to come from confirmation page')
-            if filename_good is True:
-                self.trigger_import(request, tempfilename, conditions_savelist, do_save=True)
+            if is_filename_good(tempfilename, request.POST['fn_token']) is True:
+                response = self.trigger_import(request, tempfilename, conditions_savelist, do_save=True)
+                return response
 
         # when receiving upload file
         try:

@@ -93,12 +93,10 @@ def make_filename_token(filename):
     part1 = hash_string(settings.SECRET_KEY)
     part2 = hash_string(settings.SECRET_KEY[::-1])
     part3 = hash_string(filename)
-    log.debug(len(re.findall('[a-z]', part1)))
     filename_token = \
         part1[0:rx_count('[a-z]', part1)] + \
         part2[rx_count('[1|2|3|5|7]', part2):] + \
         part3[0:rx_count('[1-9]', part3)]
-    log.debug(filename_token)
     return filename_token
 
 
