@@ -41,14 +41,16 @@
     </table>
     
     <form id="submit_table" method="post">
-        {# {% csrf_token %} #}
+        {% csrf_token %}
         {# <input type="submit" name="confirm" value="bestätigen" /> #}
         <input type="button" value="Submit" onclick="submit_data()"/>
     </form>
     
-    <pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre>
-
-
+    <div class="hidden">
+        <div id="filename"> {{ filename }}></div>
+        <div id="fn_token"> {{ fn_token }}</div>
+    </div>
+    
     <script>
         $(document).ready(function(){
             $('.switch').on('click', function(e) {
@@ -83,17 +85,19 @@
         }
         
         function submit_data(){
-            // data = collect_tabledata();
-            // console.log(data);
-            url = "{% url 'conditions_import' "xml" %}";
             $.ajax({
-                type: 'post',
-                url: url,
-                data: collect_tabledata(),
-                success: 'success',
-                dataType: 'dataType'
-            });
-            // action="{% url 'conditions_import' "xml" %}"
+                type: 'POST',
+                url: "{% url 'conditions_import' "xml" %}",
+                headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]')[0].getAttribute('value') },
+                dataType: 'json',
+                data: {
+                    'tabledata': JSON.stringify(collect_tabledata()),
+                    'filename': $('#filename').text(),
+                    'fn_token': $('#fn_token').text(),
+                },
+                error: function(data){
+                    console.log(data.results);
+                }
         }
     </script>
 {% endblock %}
