@@ -1,7 +1,12 @@
+import hashlib
 import logging
+import re
 import time
 import defusedxml.ElementTree as ET
+
 from random import randint
+
+from django.conf import settings
 
 log = logging.getLogger(__name__)
 
@@ -72,3 +77,30 @@ def validate_xml(tempfilename):
         root = tree.getroot()
         roottag = root.tag
     return roottag, tree
+
+
+def hash_string(string):
+    hash_object = hashlib.sha512(string)
+    hex_dig = hash_object.hexdigest()
+    return hex_dig
+
+
+def rx_count(rx, string):
+    return len(re.findall(rx, string))
+
+
+def make_filename_token(filename):
+    part1 = hash_string(settings.SECRET_KEY)
+    part2 = hash_string(settings.SECRET_KEY[::-1])
+    part3 = hash_string(filename)
+    log.debug(len(re.findall('[a-z]', part1)))
+    filename_token = \
+        part1[0:rx_count('[a-z]', part1)] + \
+        part2[rx_count('[1|2|3|5|7]', part2):] + \
+        part3[0:rx_count('[1-9]', part3)]
+    log.debug(filename_token)
+    return filename_token
+
+
+def is_filename_good(filename, fn_token):
+    return make_filename_token(filename).strip() == fn_token.strip()
