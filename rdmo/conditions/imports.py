@@ -58,6 +58,7 @@ def import_conditions(conditions_node, conditions_savelist={}, do_save=False):
             log.info('Condition not saving "' + str(condition_uri) + '" due to validation error')
             pass
         else:
+            log.debug(condition_uri)
             conditions_savelist[condition_uri] = models_are_equal(condition_before, condition)
             log.info('Condition saving to "' + str(condition_uri) + '"')
             if do_save is True:
