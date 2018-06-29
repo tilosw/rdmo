@@ -80,14 +80,10 @@ def model_will_be_imported(model1, model2):
         try:
             val2 = getattr(model2, att1)
         except Exception as e:
-            log.debug('Unable to retrieve value from model. ' + str(e))
             will_be_imported = True
         else:
             if val1 != val2:
-                log.debug("RETURNING NOT EQUAL: " + str(val1) + " - " + str(val2))
                 will_be_imported = True
-            else:
-                log.debug("RETURNING EQUAL: " + str(val1) + " - " + str(val2))
     return will_be_imported
 
 

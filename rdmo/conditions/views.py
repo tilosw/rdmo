@@ -72,8 +72,7 @@ class ConditionsImportXMLView(ModelPermissionMixin, ListView):
         else:
             log.info('Post seems to come from confirmation page')
             if is_filename_good(tempfilename, request.POST['fn_token']) is True:
-                response = self.trigger_import(request, tempfilename, conditions_savelist, do_save=True)
-                return response
+                return self.trigger_import(request, tempfilename, conditions_savelist, do_save=True)
 
         # when receiving upload file
         try:
@@ -83,8 +82,7 @@ class ConditionsImportXMLView(ModelPermissionMixin, ListView):
         else:
             log.info('Post from file import dialog')
             tempfilename = handle_uploaded_file(request.FILES['uploaded_file'])
-            response = self.trigger_import(request, tempfilename, do_save=False)
-            return response
+            return self.trigger_import(request, tempfilename, do_save=False)
 
     def trigger_import(self, request, tempfilename, tabledata={}, do_save=False):
         log.info('Parsing file ' + tempfilename)
