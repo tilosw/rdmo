@@ -22,12 +22,14 @@ def import_conditions(conditions_node, conditions_savelist={}, do_save=False):
 
         try:
             condition = Condition.objects.get(uri=condition_uri)
+            condition_before = condition
         except Condition.DoesNotExist:
             condition = Condition()
             log.info('Condition not in db. Created with uri ' + condition_uri)
+            condition_before = None
         else:
             log.info('Condition does exist. Loaded from uri ' + condition_uri)
-        condition_before = condition
+
         condition.uri_prefix = condition_uri.split('/conditions/')[0]
         condition.key = condition_uri.split('/')[-1]
         condition.comment = get_value_from_treenode(condition_node, get_ns_tag('dc:comment', nsmap))
@@ -52,28 +54,47 @@ def import_conditions(conditions_node, conditions_savelist={}, do_save=False):
         except (AttributeError, Option.DoesNotExist):
             condition.target_option = None
 
+        # validate condition
         try:
             ConditionUniqueKeyValidator(condition).validate()
         except ValidationError:
             log.info('Condition not saving "' + str(condition_uri) + '" due to validation error')
             pass
         else:
-            log.debug(type(conditions_savelist))
-            log.debug(conditions_savelist)
-            conditions_savelist[condition_uri] = models_are_equal(condition_before, condition)
-            if do_save is True:
+            savelist_uri_setting = get_savelist_setting(condition_uri, conditions_savelist)
+            # update condition savelist
+            if condition_before is None:
+                conditions_savelist[condition_uri] = True
+            else:
+                conditions_savelist[condition_uri] = model_will_be_imported(condition_before, condition)
+            # save
+            if do_save is True and savelist_uri_setting is True:
                 log.info('Condition saving to "' + str(condition_uri) + '"')
                 condition.save()
     return conditions_savelist, do_save
 
 
-def models_are_equal(model1, model2):
-    are_equal = True
-    for att, val in model1.__dict__.iteritems():
+def model_will_be_imported(model1, model2):
+    will_be_imported = False
+    for att1, val1 in model1.__dict__.iteritems():
         try:
-            if val != getattr(model2, att):
-                are_equal = False
+            val2 = getattr(model2, att1)
         except Exception as e:
-            log.debug('Comparison exception ' + str(e))
-            are_equal = False
-    return are_equal
+            log.debug('Unable to retrieve value from model. ' + str(e))
+            will_be_imported = True
+        else:
+            if val1 != val2:
+                log.debug("RETURNING NOT EQUAL: " + str(val1) + " - " + str(val2))
+                will_be_imported = True
+            else:
+                log.debug("RETURNING EQUAL: " + str(val1) + " - " + str(val2))
+    return will_be_imported
+
+
+def get_savelist_setting(uri, condition_savelist):
+    r = True
+    try:
+        r = condition_savelist[uri]
+    except KeyError:
+        pass
+    return r

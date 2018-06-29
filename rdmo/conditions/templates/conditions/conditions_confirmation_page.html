@@ -28,29 +28,29 @@
             <th>import</th>
         </tr>
 
-        {% for uri, save in conditions_savelist %}
+        {% for uri, will_be_imported in conditions_savelist %}
             <tr>
-                <td> {{ uri }} </td> 
-                {% if save is True %}
-                    <td class="switch bggreen">{{ save }}</td>
+                <td> {{ uri }} </td>
+                {% if will_be_imported is True %}
+                    <td class="switch bggreen">{{ will_be_imported }}</td>
                 {% else %}
-                    <td class="switch bgred">{{ save }}</td>
+                    <td class="switch bgred">{{ will_be_imported }}</td>
                 {% endif %}
             </tr>
         {% endfor %}
     </table>
-    
+
     <form id="submit_table" method="post">
         {% csrf_token %}
         {# <input type="submit" name="confirm" value="bestätigen" /> #}
         <input type="button" value="Submit" onclick="submit_data()"/>
     </form>
-    
+
     <div class="hidden">
         <div id="filename"> {{ filename }}></div>
         <div id="fn_token"> {{ fn_token }}</div>
     </div>
-    
+
     <script>
         $(document).ready(function(){
             $('.switch').on('click', function(e) {
@@ -83,7 +83,7 @@
             }
             return r
         }
-        
+
         function submit_data(){
             $.ajax({
                 type: 'POST',
