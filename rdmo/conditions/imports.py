@@ -2,7 +2,7 @@ import logging
 
 from django.core.exceptions import ValidationError
 
-from rdmo.core.imports import get_value_from_treenode
+from rdmo.core.imports import get_value_from_treenode, get_savelist_setting, model_will_be_imported
 from rdmo.domain.models import Attribute
 from rdmo.options.models import Option
 from rdmo.core.utils import get_ns_map, get_ns_tag, get_uri
@@ -72,25 +72,3 @@ def import_conditions(conditions_node, conditions_savelist={}, do_save=False):
                 log.info('Condition saving to "' + str(condition_uri) + '"')
                 condition.save()
     return conditions_savelist, do_save
-
-
-def model_will_be_imported(model1, model2):
-    will_be_imported = False
-    for att1, val1 in model1.__dict__.iteritems():
-        try:
-            val2 = getattr(model2, att1)
-        except Exception as e:
-            will_be_imported = True
-        else:
-            if val1 != val2:
-                will_be_imported = True
-    return will_be_imported
-
-
-def get_savelist_setting(uri, condition_savelist):
-    r = True
-    try:
-        r = condition_savelist[uri]
-    except KeyError:
-        pass
-    return r

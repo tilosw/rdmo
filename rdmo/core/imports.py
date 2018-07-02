@@ -102,3 +102,25 @@ def make_filename_token(filename):
 
 def is_filename_good(filename, fn_token):
     return make_filename_token(filename).strip() == fn_token.strip()
+
+
+def model_will_be_imported(model1, model2):
+    will_be_imported = False
+    for att1, val1 in model1.__dict__.iteritems():
+        try:
+            val2 = getattr(model2, att1)
+        except Exception as e:
+            will_be_imported = True
+        else:
+            if val1 != val2:
+                will_be_imported = True
+    return will_be_imported
+
+
+def get_savelist_setting(uri, condition_savelist):
+    r = True
+    try:
+        r = condition_savelist[uri]
+    except KeyError:
+        pass
+    return r
