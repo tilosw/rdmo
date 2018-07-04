@@ -1,10 +1,8 @@
 import hashlib
 import logging
 import re
-import time
+import tempfile
 import defusedxml.ElementTree as ET
-
-from random import randint
 
 from django.conf import settings
 
@@ -50,15 +48,8 @@ def get_value_from_treenode(xml_node, element, what_to_get=None):
     return r
 
 
-def generate_tempfile_name():
-    t = int(round(time.time() * 1000))
-    r = randint(10000, 99999)
-    fn = '/tmp/upload_' + str(t) + '_' + str(r) + '.xml'
-    return fn
-
-
 def handle_uploaded_file(filedata):
-    tempfilename = generate_tempfile_name()
+    tempfilename = tempfile.NamedTemporaryFile()
     with open(tempfilename, 'wb+') as destination:
         for chunk in filedata.chunks():
             destination.write(chunk)
